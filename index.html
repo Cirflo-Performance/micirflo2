@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mi CIRFLO | CIRFLO PERFORMANCE</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f7fa;color:#17202a}
+header{background:#101827;color:#fff;padding:18px 22px}.wrap{max-width:1100px;margin:auto}.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:12px;background:#fff;color:#101827;display:grid;place-items:center;font-weight:900}.brand b{font-size:20px}.brand small{display:block;color:#b8c2cf;margin-top:3px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}nav button,.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}nav button{background:#263244;color:#fff}nav button.active{background:#0ea5e9}
+main{padding:24px 16px}.view{display:none}.view.active{display:block}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.two{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}.card{background:#fff;border:1px solid #e2e8f0;border-radius:15px;padding:18px;box-shadow:0 3px 14px #00000008}.muted{color:#667085}.stat{font-size:26px;font-weight:900;margin-top:7px}.tag{padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.danger{background:#fee2e2;color:#991b1b}.primary{background:#0ea5e9;color:#fff}.secondary{background:#e8edf2;color:#17202a}.row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #edf0f2}.row:last-child{border:0}input,select,textarea{width:100%;padding:10px;border:1px solid #ccd4df;border-radius:8px;margin-top:5px}label{font-size:12px;font-weight:700}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}table{width:100%;border-collapse:collapse}th,td{padding:11px;text-align:left;border-bottom:1px solid #e7ebef;font-size:13px}th{color:#667085}.notice{background:#e0f2fe;border:1px solid #bae6fd;padding:14px;border-radius:12px}.qrbox{text-align:center}.qrbox img{width:190px;height:190px;border:8px solid #fff;box-shadow:0 0 0 1px #ddd}.empty{padding:30px;text-align:center;color:#667085}
+@media(max-width:760px){.grid,.two,.form{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<div class="brand"><div class="logo">CF</div><div><b>Mi CIRFLO</b><small>CIRFLO PERFORMANCE · Pasaporte Digital del Vehículo</small></div></div>
+<nav>
+<button class="active" onclick="view('inicio',this)">Inicio</button><button onclick="view('vehiculos',this)">Vehículos</button><button onclick="view('nuevo',this)">Nuevo vehículo</button><button onclick="view('cliente',this)">Portal cliente</button>
+</nav></div></header>
+<main class="wrap">
+<section id="inicio" class="view active">
+<h1>Panel CIRFLO</h1><p class="muted">Administrá clientes, vehículos y mantenimientos desde un solo lugar.</p>
+<div class="grid">
+<div class="card"><div class="muted">Vehículos</div><div id="countCars" class="stat">0</div></div>
+<div class="card"><div class="muted">Services registrados</div><div id="countServices" class="stat">0</div></div>
+<div class="card"><div class="muted">Pendientes</div><div id="countPending" class="stat">0</div></div>
+</div>
+<div class="card" style="margin-top:14px"><h3>Cómo usar esta versión</h3><div class="row"><b>1</b><span>Cargá el vehículo del cliente.</span></div><div class="row"><b>2</b><span>Registrá cada service y observación.</span></div><div class="row"><b>3</b><span>Generá el QR de la ficha.</span></div><div class="row"><b>4</b><span>El cliente puede consultar su historial desde el Portal cliente.</span></div><p class="notice"><b>Importante:</b> esta versión guarda los datos en el navegador mediante almacenamiento local. Es ideal para empezar a probar el sistema. Para uso multiusuario en internet hay que conectarla a una base de datos.</p></div>
+</section>
+
+<section id="vehiculos" class="view"><h1>Vehículos</h1><div class="card"><table><thead><tr><th>Cliente</th><th>Vehículo</th><th>Patente</th><th>Km</th><th></th></tr></thead><tbody id="carsTable"></tbody></table></div></section>
+
+<section id="nuevo" class="view"><h1>Nuevo vehículo</h1><div class="card"><form id="carForm" class="form">
+<div><label>Cliente</label><input id="owner" required></div><div><label>Teléfono</label><input id="phone"></div>
+<div><label>Marca</label><input id="brand" required></div><div><label>Modelo</label><input id="model" required></div>
+<div><label>Año</label><input id="year" type="number"></div><div><label>Patente</label><input id="plate" required></div>
+<div><label>Kilometraje</label><input id="km" type="number" required></div><div><label>VIN / Chasis</label><input id="vin"></div>
+<div class="full"><label>Observaciones iniciales</label><textarea id="notes"></textarea></div>
+<div class="full"><button class="btn primary" type="submit">Guardar vehículo y generar QR</button></div>
+</form></div></section>
+
+<section id="cliente" class="view"><h1>Portal cliente</h1><p class="muted">Seleccioná un vehículo para simular el acceso mediante QR.</p><div class="card"><select id="clientSelect" onchange="renderClient()"></select></div><div id="clientPanel" style="margin-top:14px"></div></section>
+</main>
+<script>
+const KEY="micirflo_data_v1";
+let data=JSON.parse(localStorage.getItem(KEY)||"[]");
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function id(){return "CF-"+Date.now().toString(36).toUpperCase()}
+function view(id,btn){document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));btn.classList.add("active");render()}
+document.getElementById("carForm").addEventListener("submit",e=>{e.preventDefault();const c={id:id(),owner:owner.value,phone:phone.value,brand:brand.value,model:model.value,year:year.value,plate:plate.value,km:Number(km.value),vin:vin.value,notes:notes.value,services:[],pending:[]};data.push(c);save();e.target.reset();alert("Vehículo guardado. ID: "+c.id);view("vehiculos",document.querySelectorAll("nav button")[1])});
+function render(){countCars.textContent=data.length;countServices.textContent=data.reduce((a,c)=>a+c.services.length,0);countPending.textContent=data.reduce((a,c)=>a+c.pending.length,0);
+carsTable.innerHTML=data.length?data.map(c=>`<tr><td>${esc(c.owner)}</td><td>${esc(c.brand)} ${esc(c.model)}</td><td>${esc(c.plate)}</td><td>${c.km.toLocaleString()} km</td><td><button class="btn secondary" onclick="openCar('${c.id}')">Abrir</button></td></tr>`).join(""):`<tr><td colspan="5" class="empty">Todavía no hay vehículos. Creá el primero.</td></tr>`;
+clientSelect.innerHTML=data.length?data.map(c=>`<option value="${c.id}">${esc(c.plate)} · ${esc(c.brand)} ${esc(c.model)} · ${esc(c.owner)}</option>`).join(""):"<option>Sin vehículos</option>";renderClient()}
+function openCar(cid){const c=data.find(x=>x.id===cid);const target=document.getElementById("cliente");document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));target.classList.add("active");document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));document.querySelectorAll("nav button")[3].classList.add("active");clientSelect.value=c.id;renderClient()}
+function renderClient(){const c=data.find(x=>x.id===clientSelect.value);if(!c){clientPanel.innerHTML='<div class="card empty">No hay vehículos cargados.</div>';return}
+const qr="https://quickchart.io/qr?size=300&text="+encodeURIComponent("https://micirflo.com/vehiculo/"+c.id);
+clientPanel.innerHTML=`<div class="two"><div><div class="card"><div style="display:flex;justify-content:space-between"><div><h2>${esc(c.brand)} ${esc(c.model)}</h2><div class="muted">${esc(c.plate)} · ${c.km.toLocaleString()} km</div></div><span class="tag ok">Ficha activa</span></div><div class="row"><span>Cliente</span><b>${esc(c.owner)}</b></div><div class="row"><span>Último service</span><b>${c.services.length?c.services[c.services.length-1].date:"Sin registrar"}</b></div><div class="row"><span>Próximo service</span><b>${c.services.length?c.services[c.services.length-1].nextKm.toLocaleString()+" km":"A definir"}</b></div></div>
+<div class="card" style="margin-top:14px"><h3>Historial</h3>${c.services.length?c.services.slice().reverse().map(s=>`<div class="row"><div><b>${esc(s.type)}</b><div class="muted">${esc(s.date)} · ${Number(s.km).toLocaleString()} km</div><div class="muted">${esc(s.obs)}</div></div><span class="tag ok">Realizado</span></div>`).join(""):"<div class='empty'>No hay services registrados todavía.</div>"}</div></div>
+<div><div class="card qrbox"><h3>QR del vehículo</h3><img src="${qr}" alt="QR"><p class="muted">${c.id}</p><button class="btn primary" onclick="window.open('${qr}','_blank')">Abrir QR</button></div><div class="card" style="margin-top:14px"><h3>Pendientes</h3>${c.pending.length?c.pending.map(x=>`<div class="row"><span>${esc(x)}</span><span class="tag warn">Pendiente</span></div>`).join(""):"<div class='muted'>Sin pendientes registrados.</div>"}</div><div class="card" style="margin-top:14px"><h3>Agregar service</h3><div><label>Servicio</label><input id="stype" placeholder="Ej. Service 80.000 km"></div><div><label>Kilometraje</label><input id="skm" type="number" value="${c.km}"></div><div><label>Próximo service (km)</label><input id="nextkm" type="number" value="${c.km+10000}"></div><div><label>Observaciones</label><textarea id="sobs"></textarea></div><button class="btn primary" style="margin-top:10px;width:100%" onclick="addService('${c.id}')">Registrar service</button></div><div class="card" style="margin-top:14px"><h3>Agregar pendiente</h3><input id="pendingText" placeholder="Ej. Cambiar pastillas delanteras"><button class="btn secondary" style="margin-top:8px;width:100%" onclick="addPending('${c.id}')">Guardar pendiente</button></div></div></div>`}
+function addService(cid){const c=data.find(x=>x.id===cid);c.services.push({type:stype.value||"Service",date:new Date().toLocaleDateString("es-AR"),km:Number(skm.value||c.km),nextKm:Number(nextkm.value||c.km+10000),obs:sobs.value});c.km=Number(skm.value||c.km);save();alert("Service registrado.");}
+function addPending(cid){const c=data.find(x=>x.id===cid);if(pendingText.value.trim()){c.pending.push(pendingText.value.trim());pendingText.value="";save();alert("Pendiente guardado.");}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+render();
+</script>
+</body></html>
